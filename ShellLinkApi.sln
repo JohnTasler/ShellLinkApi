@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellLinkApi", "ShellLinkApi\ShellLinkApi.csproj", "{0F323C40-3D17-442F-A587-FC0830F3FE23}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellLinkApi.Tests", "ShellLinkApi.Tests\ShellLinkApi.Tests.csproj", "{93E096B4-FFD7-4E13-8203-10BA51B76BDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellLinkApi", "ShellLinkApi\ShellLinkApi.csproj", "{56B4016F-7AD6-4B74-9151-A7E99CAF8685}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{0F323C40-3D17-442F-A587-FC0830F3FE23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F323C40-3D17-442F-A587-FC0830F3FE23}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F323C40-3D17-442F-A587-FC0830F3FE23}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F323C40-3D17-442F-A587-FC0830F3FE23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93E096B4-FFD7-4E13-8203-10BA51B76BDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93E096B4-FFD7-4E13-8203-10BA51B76BDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93E096B4-FFD7-4E13-8203-10BA51B76BDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93E096B4-FFD7-4E13-8203-10BA51B76BDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56B4016F-7AD6-4B74-9151-A7E99CAF8685}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56B4016F-7AD6-4B74-9151-A7E99CAF8685}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56B4016F-7AD6-4B74-9151-A7E99CAF8685}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56B4016F-7AD6-4B74-9151-A7E99CAF8685}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
+using ShellLinkApi.Extensions;
+using ct = System.Runtime.InteropServices.ComTypes;
 
-namespace ShortcutLinkApi.Structures
+namespace ShellLinkApi.Structures
 {
     [StructLayout(LayoutKind.Sequential)]
     public class ShellLinkHeader
@@ -28,20 +29,38 @@ namespace ShortcutLinkApi.Structures
         /// </summary>
         public FileAttributes FileAttributes;
 
+        public DateTime CreationTime
+        {
+            get { return _creationTime.ToDateTime(); }
+            set { _creationTime = value.ToFileTimeStructure(); }
+        }
+
+        public DateTime AccessTime
+        {
+            get { return _accessTime.ToDateTime(); }
+            set { _accessTime = value.ToFileTimeStructure(); }
+        }
+
+        public DateTime WriteTime
+        {
+            get { return _writeTime.ToDateTime(); }
+            set { _writeTime = value.ToFileTimeStructure(); }
+        }
+
         /// <summary>
         /// A FILETIME structure ([MS-DTYP] section 2.3.3) that specifies the creation time of the link target in UTC (Coordinated Universal Time). If the value is zero, there is no creation time set on the link target.
         /// </summary>
-        public FILETIME CreationTime;
+        private ct.FILETIME _creationTime;
 
         /// <summary>
         /// A FILETIME structure ([MS-DTYP] section 2.3.3) that specifies the access time of the link target in UTC (Coordinated Universal Time). If the value is zero, there is no access time set on the link target.
         /// </summary>
-        public FILETIME AccessTime;
+        private ct.FILETIME _accessTime;
 
         /// <summary>
         /// A FILETIME structure ([MS-DTYP] section 2.3.3) that specifies the write time of the link target in UTC (Coordinated Universal Time). If the value is zero, there is no write time set on the link target.
         /// </summary>
-        public FILETIME WriteTime;
+        private ct.FILETIME _writeTime;
 
         /// <summary>
         /// A 32-bit unsigned integer that specifies the size, in bytes, of the link target. If the link target file is larger than 0xFFFFFFFF, this value specifies the least significant 32 bits of the link target file size.
@@ -56,16 +75,16 @@ namespace ShortcutLinkApi.Structures
         /// <summary>
         /// A 32-bit unsigned integer that specifies the expected window state of an application launched by the link. This value SHOULD be one of the following.
         /// </summary>
-        ShowCommand ShowCommand;
+        public ShowCommand ShowCommand;
 
         /// <summary>
         /// that specifies the keystrokes used to launch the application referenced by the shortcut key. This value is assigned to the application after it is launched, so that pressing the key activates that application.
         /// </summary>
         public HotKey HotKey;
 
-        private ushort Reserved1;
-        private uint Reserved2;
-        private uint Reserved3;
+        private readonly ushort Reserved1;
+        private readonly uint Reserved2;
+        private readonly uint Reserved3;
     }
 
     /// <summary>
