@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using ShellLinkApi.Extensions;
 
 namespace ShellLinkApi.Structures
 {
@@ -144,25 +145,6 @@ namespace ShellLinkApi.Structures
 			return offset + sizeof(ushort);
 		}
 
-		internal static int GetHashCode(IntPtr pidl)
-		{
-			int hashCode = 0;
-			if (!ItemIdList.GetIsEmpty(pidl))
-			{
-				int byteLength = ItemIdList.GetByteLength(pidl);
-				int intCount = byteLength / sizeof(int);
-				int byteCount = byteLength % sizeof(int);
-
-				int[] ints = new int[intCount];
-				Marshal.Copy(pidl, ints, 0, intCount);
-				for (int index = 0; index < intCount; ++index)
-					hashCode ^= ints[index];
-				for (int index = 0; index < byteCount; ++index)
-					hashCode ^= Marshal.ReadByte(pidl, index) << (index * 8);
-			}
-			return hashCode;
-		}
-
 		internal static bool GetIsEmpty(IntPtr pidl)
 		{
 			return (pidl == IntPtr.Zero) || (Marshal.ReadInt16(pidl) == 0);
@@ -182,7 +164,7 @@ namespace ShellLinkApi.Structures
 
 		public static bool Equals(ItemIdList pidl1, ItemIdList pidl2)
 		{
-			return ShellApi.ILIsEqual(pidl1, pidl2);
+            return pidl1.Value.IsContentEqual(pidl1.ByteLength, pidl2.Value, pidl2.ByteLength);
 		}
 
 		public bool Equals(ItemIdList value)
@@ -202,7 +184,7 @@ namespace ShellLinkApi.Structures
 
 		public static bool Equals(ItemIdList pidl1, ChildItemIdList pidl2)
 		{
-			return ShellApi.ILIsEqual(pidl1, pidl2);
+            return pidl1.Value.IsContentEqual(pidl1.ByteLength, pidl2.Value, pidl2.ByteLength);
 		}
 
 		public bool Equals(ChildItemIdList value)
@@ -222,7 +204,7 @@ namespace ShellLinkApi.Structures
 
 		public override int GetHashCode()
 		{
-			return ItemIdList.GetHashCode(base.handle);
+            return base.handle.GetHashCode();
 		}
 
 		public override string ToString()
@@ -434,7 +416,7 @@ namespace ShellLinkApi.Structures
 
 		public static bool Equals(ChildItemIdList pidl1, ChildItemIdList pidl2)
 		{
-			return ShellApi.ILIsEqual(pidl1, pidl2);
+            return pidl1.Equals(pidl2);
 		}
 
 		public bool Equals(ChildItemIdList value)
@@ -454,7 +436,7 @@ namespace ShellLinkApi.Structures
 
 		public static bool Equals(ChildItemIdList pidl1, ItemIdList pidl2)
 		{
-			return ShellApi.ILIsEqual(pidl1, pidl2);
+            return pidl1.Value.IsContentEqual(pidl1.ByteLength, pidl2.Value, pidl2.ByteLength);
 		}
 
 		public bool Equals(ItemIdList value)
@@ -474,10 +456,10 @@ namespace ShellLinkApi.Structures
 
 		public override int GetHashCode()
 		{
-			return ItemIdList.GetHashCode(base.handle);
-		}
+            return base.handle.GetHashCode();
+        }
 
-		public override string ToString()
+        public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder("{");
 			foreach (byte b in this.ToArray(true))
@@ -485,6 +467,6 @@ namespace ShellLinkApi.Structures
 			sb.Append(" }");
 			return sb.ToString();
 		}
-		#endregion Overrides
-	}
+        #endregion Overrides
+    }
 }
