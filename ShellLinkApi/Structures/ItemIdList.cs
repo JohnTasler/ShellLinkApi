@@ -196,8 +196,10 @@ namespace ShellLinkApi.Structures
 		#region Overrides
 		public override bool Equals(object o)
 		{
-			if ((o == null) || !(o is ItemIdList || o is ChildItemIdList))
-				return false;
+            if ((o == null) || !(o is ItemIdList || o is ChildItemIdList))
+            {
+                return false;
+            }
 
 			return (o is ItemIdList) ? Equals(this, (ItemIdList)o) : Equals(this, (ChildItemIdList)o);
 		}
@@ -211,13 +213,18 @@ namespace ShellLinkApi.Structures
 		{
 			StringBuilder sb = new StringBuilder("ItemIdList:\n");
 			int index = 0;
-			foreach (ChildItemIdList child in this)
-				using (child)
-					sb.AppendFormat("  [{0:X2}] {1}\n", index++, child.ToString());
+            foreach (ChildItemIdList child in this)
+            {
+                using (child)
+                {
+                    sb.AppendFormat("  [{0:X2}] {1}\n", index++, child.ToString());
+                }
+            }
 			return sb.ToString();
 		}
 		#endregion Overrides
 
+        // TODO: Implement these so that this list does not have to be read-only
 		#region IList<ChildItemIdList> Members
 		public int IndexOf(ChildItemIdList item)
 		{
@@ -259,10 +266,11 @@ namespace ShellLinkApi.Structures
 				throw new NotImplementedException();
 			}
 		}
-		#endregion IList<ChildItemIdList> Members
+        #endregion IList<ChildItemIdList> Members
 
-		#region ICollection<ChildItemIdList> Members
-		public void Add(ChildItemIdList item)
+        // TODO: Implement these so that this list does not have to be read-only
+        #region ICollection<ChildItemIdList> Members
+        public void Add(ChildItemIdList item)
 		{
 			throw new NotImplementedException();
 		}
@@ -279,8 +287,10 @@ namespace ShellLinkApi.Structures
 
 		public void CopyTo(ChildItemIdList[] array, int arrayIndex)
 		{
-			foreach (ChildItemIdList item in this)
-				array[arrayIndex++] = item;
+            foreach (ChildItemIdList item in this)
+            {
+                array[arrayIndex++] = item;
+            }
 		}
 
 		public int Count
@@ -304,10 +314,7 @@ namespace ShellLinkApi.Structures
 
 		public bool IsReadOnly
 		{
-			get
-			{
-				return true;
-			}
+			get { return true; }
 		}
 
 		public bool Remove(ChildItemIdList item)
@@ -343,7 +350,6 @@ namespace ShellLinkApi.Structures
 			return this.GetEnumerator();
 		}
 		#endregion IEnumerable Members
-
 	}
 
 	public class ChildItemIdList : SafeCoTaskMemHandle
@@ -380,10 +386,7 @@ namespace ShellLinkApi.Structures
 		#region Properties
 		public IntPtr Value
 		{
-			get
-			{
-				return base.handle;
-			}
+			get { return base.handle; }
 		}
 
 		public int ByteLength
@@ -448,8 +451,10 @@ namespace ShellLinkApi.Structures
 		#region Overrides
 		public override bool Equals(object o)
 		{
-			if ((o == null) || !(o is ItemIdList || o is ChildItemIdList))
-				return false;
+            if ((o == null) || !(o is ItemIdList || o is ChildItemIdList))
+            {
+                return false;
+            }
 
 			return (o is ItemIdList) ? Equals(this, (ItemIdList)o) : Equals(this, (ChildItemIdList)o);
 		}
@@ -462,8 +467,10 @@ namespace ShellLinkApi.Structures
         public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder("{");
-			foreach (byte b in this.ToArray(true))
-				sb.AppendFormat(" {0:X2}", b);
+            foreach (byte b in this.ToArray(true))
+            {
+                sb.AppendFormat(" {0:X2}", b);
+            }
 			sb.Append(" }");
 			return sb.ToString();
 		}
