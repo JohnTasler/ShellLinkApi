@@ -15,14 +15,12 @@ namespace ShellLinkApi.Structures
 		#region Overrides
 		public override bool IsInvalid
 		{
-			get
-			{
-				return base.handle == IntPtr.Zero;
-			}
+			get { return base.handle == IntPtr.Zero; }
 		}
 
 		protected override bool ReleaseHandle()
 		{
+			// QUESTION: Should we set the handle back to zero afterward?
 			Marshal.FreeCoTaskMem(base.handle);
 			return true;
 		}

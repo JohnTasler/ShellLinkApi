@@ -45,7 +45,7 @@
     <Compile Include="Structures\Constants.cs" />
     <Compile Include="Structures\ItemIdList.cs" />
     <Compile Include="Structures\LinkTargetIdList.cs" />
-    <Compile Include="Structures\SafeCoTaskMemHandle.cs" />
+    <Compile Include="Framework\SafeCoTaskMemHandle.cs" />
     <Compile Include="Structures\ShellLinkHeader.cs" />
     <Compile Include="Structures\StringData.cs" />
   </ItemGroup>
