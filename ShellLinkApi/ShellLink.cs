@@ -39,52 +39,62 @@ namespace ShellLinkApi
         private void ReadFromStream(Stream stream)
         {
             ValidateArgument.IsNotNull(stream, nameof(stream));
-
-            this.ShellLinkHeader = stream.ReadStructure<ShellLinkHeader>();
-
-            var linkFlags = this.ShellLinkHeader.LinkFlags;
-
-            if (linkFlags.HasFlag(LinkFlags.HasLinkTargetIDList))
+            using (var reader = new BinaryReader(stream, Encoding.Unicode, true))
             {
-                this.LinkTargetIDList = stream.ReadStructure<LinkTargetIDList>();
-                stream.Position += this.LinkTargetIDList.IDListSize;
-            }
+                this.ShellLinkHeader = reader.ReadStructure<ShellLinkHeader>();
 
-            if (linkFlags.HasFlag(LinkFlags.HasLinkInfo))
-            {
-                this.LinkInfo = stream.ReadStructure<LinkInfo>();
-                stream.Position += this.LinkInfo.LinkInfoSize;
-            }
+                var linkFlags = this.ShellLinkHeader.LinkFlags;
 
-            if (linkFlags.HasFlag(LinkFlags.HasName))
-            {
-                this.NameString = stream.ReadString();
-            }
+                if (linkFlags.HasLinkTargetIDList)
+                {
+                    this.LinkTargetIDList = new LinkTargetIDList(reader);
+                }
 
-            if (linkFlags.HasFlag(LinkFlags.HasRelativePath))
-            {
-                this.RelativePath = stream.ReadString();
-            }
+                if (linkFlags.HasLinkInfo)
+                {
+                    this.LinkInfo = new LinkInfo(reader);
+                }
 
-            if (linkFlags.HasFlag(LinkFlags.HasWorkingDir))
-            {
-                this.WorkingDir = stream.ReadString();
-            }
+                if (linkFlags.HasName)
+                {
+                    this.NameString = reader.ReadShellLinkString();
+                }
 
-            if (linkFlags.HasFlag(LinkFlags.HasArguments))
-            {
-                this.CommandLineArguments = stream.ReadString();
-            }
+                if (linkFlags.HasRelativePath)
+                {
+                    this.RelativePath = reader.ReadShellLinkString();
+                }
 
-            if (linkFlags.HasFlag(LinkFlags.HasIconLocation))
-            {
-                this.IconLocation = stream.ReadString();
+                if (linkFlags.HasWorkingDir)
+                {
+                    this.WorkingDir = reader.ReadShellLinkString();
+                }
+
+                if (linkFlags.HasArguments)
+                {
+                    this.CommandLineArguments = reader.ReadShellLinkString();
+                }
+
+                if (linkFlags.HasIconLocation)
+                {
+                    this.IconLocation = reader.ReadShellLinkString();
+                }
             }
         }
 
         private static FileStream OpenFileStreamForReading(string fileName)
         {
             return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 0x1000, FileOptions.SequentialScan);
+        }
+    }
+
+    internal static class BinaryReaderExtensions
+    {
+        public static string ReadShellLinkString(this BinaryReader @this)
+        {
+            ushort countCharacters = @this.ReadUInt16();
+            var chars = @this.ReadChars(countCharacters);
+            return new string(chars);
         }
     }
 }

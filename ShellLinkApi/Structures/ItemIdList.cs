@@ -1,218 +1,230 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using ShellLinkApi.Extensions;
 
 namespace ShellLinkApi.Structures
 {
-	public class ItemIdList : SafeCoTaskMemHandle, IList<ChildItemIdList>
-	{
-		#region Static Fields
-		public static readonly ItemIdList Null = new ItemIdList();
-		#endregion Static Fields
+    public class ItemIdList : SafeCoTaskMemHandle, IList<ChildItemIdList>
+    {
+        #region Static Fields
+        public static readonly ItemIdList Null = new ItemIdList();
+        #endregion Static Fields
 
-		#region Construction
-		public ItemIdList()
-		{
-		}
+        #region Construction
+        public ItemIdList()
+        {
+        }
 
-		public ItemIdList(ChildItemIdList childItemIdList)
-			: this(ItemIdList.Null, childItemIdList)
-		{
-		}
+        public ItemIdList(Stream stream)
+        {
+        }
 
-		public ItemIdList(ItemIdList itemIdList, ChildItemIdList childItemIdList)
-		{
-			int parentByteLength = itemIdList.ByteLength - sizeof(ushort);
-			int childByteLength = childItemIdList.ByteLength;
-			int newLength = parentByteLength + childByteLength;
+        public ItemIdList(byte[] array)
+        {
 
-			byte[] buffer = new byte[newLength];
-			if (!itemIdList.IsEmpty)
-				Marshal.Copy(itemIdList.Value, buffer, 0, parentByteLength);
-			Marshal.Copy(childItemIdList.Value, buffer, parentByteLength, childByteLength);
-			base.SetHandle(Marshal.AllocCoTaskMem(newLength));
-			Marshal.Copy(buffer, 0, base.handle, newLength);
-		}
+        }
 
-		public ItemIdList(ItemIdList itemIdList)
-		{
-			if (!itemIdList.IsEmpty)
-			{
-				int byteLength = itemIdList.ByteLength;
-				byte[] buffer = new byte[byteLength];
-				Marshal.Copy(itemIdList.Value, buffer, 0, byteLength);
-				base.SetHandle(Marshal.AllocCoTaskMem(byteLength));
-				Marshal.Copy(buffer, 0, base.handle, byteLength);
-			}
-		}
-		#endregion Construction
+        public ItemIdList(ChildItemIdList childItemIdList)
+            : this(ItemIdList.Null, childItemIdList)
+        {
+        }
 
-		#region Properties
-		public IntPtr Value
-		{
-			get { return base.handle; }
-		}
+        public ItemIdList(ItemIdList itemIdList, ChildItemIdList childItemIdList)
+        {
+            int parentByteLength = itemIdList.ByteLength - sizeof(ushort);
+            int childByteLength = childItemIdList.ByteLength;
+            int newLength = parentByteLength + childByteLength;
 
-		public int ByteLength
-		{
-			get { return ItemIdList.GetByteLength(base.handle); }
-		}
+            byte[] buffer = new byte[newLength];
+            if (!itemIdList.IsEmpty)
+            {
+                Marshal.Copy(itemIdList.Value, buffer, 0, parentByteLength);
+            }
+            Marshal.Copy(childItemIdList.Value, buffer, parentByteLength, childByteLength);
+            base.SetHandle(Marshal.AllocCoTaskMem(newLength));
+            Marshal.Copy(buffer, 0, base.handle, newLength);
+        }
 
-		public bool IsEmpty
-		{
-			get { return ItemIdList.GetIsEmpty(base.handle); }
-		}
-		#endregion Properties
+        public ItemIdList(ItemIdList itemIdList)
+        {
+            if (!itemIdList.IsEmpty)
+            {
+                int byteLength = itemIdList.ByteLength;
+                byte[] buffer = new byte[byteLength];
+                Marshal.Copy(itemIdList.Value, buffer, 0, byteLength);
+                base.SetHandle(Marshal.AllocCoTaskMem(byteLength));
+                Marshal.Copy(buffer, 0, base.handle, byteLength);
+            }
+        }
+        #endregion Construction
 
-		#region Methods
-		public ItemIdList GetParent()
-		{
-			ushort cb = 0;
-			int offset = 0;
-			int previousOffset = 0;
-			do
-			{
-				cb = (ushort)Marshal.ReadInt16(base.handle, offset);
-				if (cb != 0)
-				{
-					previousOffset = offset;
-					offset += cb;
-				}
+        #region Properties
+        public IntPtr Value
+        {
+            get { return base.handle; }
+        }
 
-			} while (cb != 0);
+        public int ByteLength
+        {
+            get { return ItemIdList.GetByteLength(base.handle); }
+        }
 
-			byte[] buffer = new byte[previousOffset + sizeof(ushort)];
-			Marshal.Copy(base.handle, buffer, 0, previousOffset);
+        public bool IsEmpty
+        {
+            get { return ItemIdList.GetIsEmpty(base.handle); }
+        }
+        #endregion Properties
 
-			ItemIdList parent = new ItemIdList();
-			parent.SetHandle(Marshal.AllocCoTaskMem(buffer.Length));
-			Marshal.Copy(buffer, 0, parent.handle, buffer.Length);
-			return parent;
-		}
+        #region Methods
+        public ItemIdList GetParent()
+        {
+            ushort cb = 0;
+            int offset = 0;
+            int previousOffset = 0;
+            do
+            {
+                cb = (ushort)Marshal.ReadInt16(base.handle, offset);
+                if (cb != 0)
+                {
+                    previousOffset = offset;
+                    offset += cb;
+                }
 
-		public ItemIdList GetParentAndChild(out ChildItemIdList child)
-		{
-			ushort cb = 0;
-			ushort cbPrev = 0;
-			int offset = 0;
-			int offsetPrev = 0;
-			do
-			{
-				cbPrev = cb;
-				cb = (ushort)Marshal.ReadInt16(base.handle, offset);
-				if (cb != 0)
-				{
-					offsetPrev = offset;
-					offset += cb;
-				}
+            } while (cb != 0);
 
-			} while (cb != 0);
+            byte[] buffer = new byte[previousOffset + sizeof(ushort)];
+            Marshal.Copy(base.handle, buffer, 0, previousOffset);
 
-			byte[] buffer = new byte[cbPrev + sizeof(ushort)];
-			Marshal.Copy(new IntPtr(base.handle.ToInt64() + offsetPrev), buffer, 0, buffer.Length);
-			child = new ChildItemIdList(buffer);
+            ItemIdList parent = new ItemIdList();
+            parent.SetHandle(Marshal.AllocCoTaskMem(buffer.Length));
+            Marshal.Copy(buffer, 0, parent.handle, buffer.Length);
+            return parent;
+        }
 
-			buffer = new byte[offsetPrev + sizeof(ushort)];
-			Marshal.Copy(base.handle, buffer, 0, offsetPrev);
-			ItemIdList parent = new ItemIdList();
-			parent.SetHandle(Marshal.AllocCoTaskMem(buffer.Length));
-			Marshal.Copy(buffer, 0, parent.handle, buffer.Length);
-			return parent;
-		}
+        public ItemIdList GetParentAndChild(out ChildItemIdList child)
+        {
+            ushort cb = 0;
+            ushort cbPrev = 0;
+            int offset = 0;
+            int offsetPrev = 0;
+            do
+            {
+                cbPrev = cb;
+                cb = (ushort)Marshal.ReadInt16(base.handle, offset);
+                if (cb != 0)
+                {
+                    offsetPrev = offset;
+                    offset += cb;
+                }
 
-		/// <summary>
-		/// Gets the number of bytes to contain the specified item id list, including the terminating NULL.
-		/// </summary>
-		/// <param name="pidl"></param>
-		/// <returns></returns>
-		public static int GetByteLength(IntPtr pidl)
-		{
-			int offset = 0;
-			if (!ItemIdList.GetIsEmpty(pidl))
-			{
-				ushort cb = 0;
-				do
-				{
-					cb = (ushort)Marshal.ReadInt16(pidl, offset);
-					offset += cb;
+            } while (cb != 0);
 
-				} while (cb != 0);
-			}
+            byte[] buffer = new byte[cbPrev + sizeof(ushort)];
+            Marshal.Copy(new IntPtr(base.handle.ToInt64() + offsetPrev), buffer, 0, buffer.Length);
+            child = new ChildItemIdList(buffer);
 
-			return offset + sizeof(ushort);
-		}
+            buffer = new byte[offsetPrev + sizeof(ushort)];
+            Marshal.Copy(base.handle, buffer, 0, offsetPrev);
+            ItemIdList parent = new ItemIdList();
+            parent.SetHandle(Marshal.AllocCoTaskMem(buffer.Length));
+            Marshal.Copy(buffer, 0, parent.handle, buffer.Length);
+            return parent;
+        }
 
-		internal static bool GetIsEmpty(IntPtr pidl)
-		{
-			return (pidl == IntPtr.Zero) || (Marshal.ReadInt16(pidl) == 0);
-		}
-		#endregion Methods
+        /// <summary>
+        /// Gets the number of bytes to contain the specified item id list, including the terminating NULL.
+        /// </summary>
+        /// <param name="pidl"></param>
+        /// <returns></returns>
+        public static int GetByteLength(IntPtr pidl)
+        {
+            int offset = 0;
+            if (!ItemIdList.GetIsEmpty(pidl))
+            {
+                ushort cb = 0;
+                do
+                {
+                    cb = (ushort)Marshal.ReadInt16(pidl, offset);
+                    offset += cb;
 
-		#region Equality Comparisons
-		public static bool operator ==(ItemIdList pidl1, ItemIdList pidl2)
-		{
-			return ItemIdList.Equals(pidl1, pidl2);
-		}
+                } while (cb != 0);
+            }
 
-		public static bool operator !=(ItemIdList pidl1, ItemIdList pidl2)
-		{
-			return !ItemIdList.Equals(pidl1, pidl2);
-		}
+            return offset + sizeof(ushort);
+        }
 
-		public static bool Equals(ItemIdList pidl1, ItemIdList pidl2)
-		{
+        internal static bool GetIsEmpty(IntPtr pidl)
+        {
+            return (pidl == IntPtr.Zero) || (Marshal.ReadInt16(pidl) == 0);
+        }
+        #endregion Methods
+
+        #region Equality Comparisons
+        public static bool operator ==(ItemIdList pidl1, ItemIdList pidl2)
+        {
+            return ItemIdList.Equals(pidl1, pidl2);
+        }
+
+        public static bool operator !=(ItemIdList pidl1, ItemIdList pidl2)
+        {
+            return !ItemIdList.Equals(pidl1, pidl2);
+        }
+
+        public static bool Equals(ItemIdList pidl1, ItemIdList pidl2)
+        {
             return pidl1.Value.IsContentEqual(pidl1.ByteLength, pidl2.Value, pidl2.ByteLength);
-		}
+        }
 
-		public bool Equals(ItemIdList value)
-		{
-			return Equals(this, value);
-		}
+        public bool Equals(ItemIdList value)
+        {
+            return Equals(this, value);
+        }
 
-		public static bool operator ==(ItemIdList pidl1, ChildItemIdList pidl2)
-		{
-			return ItemIdList.Equals(pidl1, pidl2);
-		}
+        public static bool operator ==(ItemIdList pidl1, ChildItemIdList pidl2)
+        {
+            return ItemIdList.Equals(pidl1, pidl2);
+        }
 
-		public static bool operator !=(ItemIdList pidl1, ChildItemIdList pidl2)
-		{
-			return !ItemIdList.Equals(pidl1, pidl2);
-		}
+        public static bool operator !=(ItemIdList pidl1, ChildItemIdList pidl2)
+        {
+            return !ItemIdList.Equals(pidl1, pidl2);
+        }
 
-		public static bool Equals(ItemIdList pidl1, ChildItemIdList pidl2)
-		{
+        public static bool Equals(ItemIdList pidl1, ChildItemIdList pidl2)
+        {
             return pidl1.Value.IsContentEqual(pidl1.ByteLength, pidl2.Value, pidl2.ByteLength);
-		}
+        }
 
-		public bool Equals(ChildItemIdList value)
-		{
-			return Equals(this, value);
-		}
-		#endregion Equality Comparisons
+        public bool Equals(ChildItemIdList value)
+        {
+            return Equals(this, value);
+        }
+        #endregion Equality Comparisons
 
-		#region Overrides
-		public override bool Equals(object o)
-		{
+        #region Overrides
+        public override bool Equals(object o)
+        {
             if ((o == null) || !(o is ItemIdList || o is ChildItemIdList))
             {
                 return false;
             }
 
-			return (o is ItemIdList) ? Equals(this, (ItemIdList)o) : Equals(this, (ChildItemIdList)o);
-		}
+            return (o is ItemIdList) ? Equals(this, (ItemIdList)o) : Equals(this, (ChildItemIdList)o);
+        }
 
-		public override int GetHashCode()
-		{
+        public override int GetHashCode()
+        {
             return base.handle.GetHashCode();
-		}
+        }
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder("ItemIdList:\n");
-			int index = 0;
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder("ItemIdList:\n");
+            int index = 0;
             foreach (ChildItemIdList child in this)
             {
                 using (child)
@@ -220,260 +232,260 @@ namespace ShellLinkApi.Structures
                     sb.AppendFormat("  [{0:X2}] {1}\n", index++, child.ToString());
                 }
             }
-			return sb.ToString();
-		}
-		#endregion Overrides
+            return sb.ToString();
+        }
+        #endregion Overrides
 
         // TODO: Implement these so that this list does not have to be read-only
-		#region IList<ChildItemIdList> Members
-		public int IndexOf(ChildItemIdList item)
-		{
-			throw new NotImplementedException();
-		}
+        #region IList<ChildItemIdList> Members
+        public int IndexOf(ChildItemIdList item)
+        {
+            throw new NotImplementedException();
+        }
 
-		public void Insert(int index, ChildItemIdList item)
-		{
-			throw new NotImplementedException();
-		}
+        public void Insert(int index, ChildItemIdList item)
+        {
+            throw new NotImplementedException();
+        }
 
-		public void RemoveAt(int index)
-		{
-			throw new NotImplementedException();
-		}
+        public void RemoveAt(int index)
+        {
+            throw new NotImplementedException();
+        }
 
-		public ChildItemIdList this[int index]
-		{
-			get
-			{
-				ushort cb = 0;
-				int offset = 0;
-				for (int pidlIndex = index; pidlIndex >= 0; --pidlIndex)
-				{
-					cb = (ushort)Marshal.ReadInt16(base.handle, offset);
-					if (cb == 0)
-						throw new ArgumentOutOfRangeException("index");
-					if (pidlIndex > 0)
-						offset += cb;
-				}
+        public ChildItemIdList this[int index]
+        {
+            get
+            {
+                ushort cb = 0;
+                int offset = 0;
+                for (int pidlIndex = index; pidlIndex >= 0; --pidlIndex)
+                {
+                    cb = (ushort)Marshal.ReadInt16(base.handle, offset);
+                    if (cb == 0)
+                        throw new ArgumentOutOfRangeException("index");
+                    if (pidlIndex > 0)
+                        offset += cb;
+                }
 
-				byte[] childPidl = new byte[cb + sizeof(ushort)];
-				Marshal.Copy(new IntPtr(base.handle.ToInt64() + offset), childPidl, 0, childPidl.Length - sizeof(ushort));
+                byte[] childPidl = new byte[cb + sizeof(ushort)];
+                Marshal.Copy(new IntPtr(base.handle.ToInt64() + offset), childPidl, 0, childPidl.Length - sizeof(ushort));
 
-				return new ChildItemIdList(childPidl);
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
-		}
+                return new ChildItemIdList(childPidl);
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
         #endregion IList<ChildItemIdList> Members
 
         // TODO: Implement these so that this list does not have to be read-only
         #region ICollection<ChildItemIdList> Members
         public void Add(ChildItemIdList item)
-		{
-			throw new NotImplementedException();
-		}
+        {
+            throw new NotImplementedException();
+        }
 
-		public void Clear()
-		{
-			throw new NotImplementedException();
-		}
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
 
-		public bool Contains(ChildItemIdList item)
-		{
-			throw new NotImplementedException();
-		}
+        public bool Contains(ChildItemIdList item)
+        {
+            throw new NotImplementedException();
+        }
 
-		public void CopyTo(ChildItemIdList[] array, int arrayIndex)
-		{
+        public void CopyTo(ChildItemIdList[] array, int arrayIndex)
+        {
             foreach (ChildItemIdList item in this)
             {
                 array[arrayIndex++] = item;
             }
-		}
+        }
 
-		public int Count
-		{
-			get
-			{
-				ushort cb = 0;
-				int offset = 0;
-				int count = -1;
-				do
-				{
-					cb = (ushort)Marshal.ReadInt16(base.handle, offset);
-					offset += cb;
-					++count;
+        public int Count
+        {
+            get
+            {
+                ushort cb = 0;
+                int offset = 0;
+                int count = -1;
+                do
+                {
+                    cb = (ushort)Marshal.ReadInt16(base.handle, offset);
+                    offset += cb;
+                    ++count;
 
-				} while (cb != 0);
+                } while (cb != 0);
 
-				return count;
-			}
-		}
+                return count;
+            }
+        }
 
-		public bool IsReadOnly
-		{
-			get { return true; }
-		}
+        public bool IsReadOnly
+        {
+            get { return true; }
+        }
 
-		public bool Remove(ChildItemIdList item)
-		{
-			throw new NotImplementedException();
-		}
-		#endregion ICollection<ChildItemIdList> Members
+        public bool Remove(ChildItemIdList item)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion ICollection<ChildItemIdList> Members
 
-		#region IEnumerable<ChildItemIdList> Members
-		public IEnumerator<ChildItemIdList> GetEnumerator()
-		{
-			ushort cb = 0;
-			int offset = 0;
-			do
-			{
-				cb = this.IsEmpty ? (ushort)0 : (ushort)Marshal.ReadInt16(base.handle, offset);
-				if (cb != 0)
-				{
-					byte[] childPidl = new byte[cb + sizeof(ushort)];
-					Marshal.Copy(new IntPtr(base.handle.ToInt64() + offset), childPidl, 0, childPidl.Length - sizeof(ushort));
-					yield return new ChildItemIdList(childPidl);
-				}
+        #region IEnumerable<ChildItemIdList> Members
+        public IEnumerator<ChildItemIdList> GetEnumerator()
+        {
+            ushort cb = 0;
+            int offset = 0;
+            do
+            {
+                cb = this.IsEmpty ? (ushort)0 : (ushort)Marshal.ReadInt16(base.handle, offset);
+                if (cb != 0)
+                {
+                    byte[] childPidl = new byte[cb + sizeof(ushort)];
+                    Marshal.Copy(new IntPtr(base.handle.ToInt64() + offset), childPidl, 0, childPidl.Length - sizeof(ushort));
+                    yield return new ChildItemIdList(childPidl);
+                }
 
-				offset += cb;
+                offset += cb;
 
-			} while (cb != 0);
-		}
-		#endregion IEnumerable<ChildItemIdList> Members
+            } while (cb != 0);
+        }
+        #endregion IEnumerable<ChildItemIdList> Members
 
-		#region IEnumerable Members
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return this.GetEnumerator();
-		}
-		#endregion IEnumerable Members
-	}
+        #region IEnumerable Members
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+        #endregion IEnumerable Members
+    }
 
-	public class ChildItemIdList : SafeCoTaskMemHandle
-	{
-		#region Construction
-		public ChildItemIdList(IntPtr pidl)
-		{
-			base.SetHandle(pidl);
-		}
+    public class ChildItemIdList : SafeCoTaskMemHandle
+    {
+        #region Construction
+        public ChildItemIdList(IntPtr pidl)
+        {
+            base.SetHandle(pidl);
+        }
 
-		public ChildItemIdList(byte[] array)
-		{
-			// Accept a null array argument
-			if (array == null)
-				array = new byte[sizeof(ushort)];
+        public ChildItemIdList(byte[] array)
+        {
+            // Accept a null array argument
+            if (array == null)
+                array = new byte[sizeof(ushort)];
 
-			// Validate the array length
-			if (array.Length < sizeof(ushort))
-				throw new ArgumentException("Argument Array.Length is too small to be a SHITEMID.", "array");
-			if (array.Length > ushort.MaxValue)
-				throw new ArgumentException("Argument Array.Length is too large to be a SHITEMID.", "array");
+            // Validate the array length
+            if (array.Length < sizeof(ushort))
+                throw new ArgumentException("Argument Array.Length is too small to be a SHITEMID.", "array");
+            if (array.Length > ushort.MaxValue)
+                throw new ArgumentException("Argument Array.Length is too large to be a SHITEMID.", "array");
 
-			// Allocate the unmanaged memory
-			base.SetHandle(Marshal.AllocCoTaskMem(array.Length));
+            // Allocate the unmanaged memory
+            base.SetHandle(Marshal.AllocCoTaskMem(array.Length));
 
-			// Copy the item data
-			Marshal.Copy(array, 0, base.handle, array.Length);
+            // Copy the item data
+            Marshal.Copy(array, 0, base.handle, array.Length);
 
-			//// Write the terminating null length
-			//Marshal.WriteInt16(base.handle, array.Length + sizeof(ushort), 0);
-		}
-		#endregion Construction
+            //// Write the terminating null length
+            //Marshal.WriteInt16(base.handle, array.Length + sizeof(ushort), 0);
+        }
+        #endregion Construction
 
-		#region Properties
-		public IntPtr Value
-		{
-			get { return base.handle; }
-		}
+        #region Properties
+        public IntPtr Value
+        {
+            get { return base.handle; }
+        }
 
-		public int ByteLength
-		{
-			get { return ItemIdList.GetByteLength(base.handle); }
-		}
-		#endregion Properties
+        public int ByteLength
+        {
+            get { return ItemIdList.GetByteLength(base.handle); }
+        }
+        #endregion Properties
 
-		#region Methods
-		public byte[] ToArray(bool includeByteCountPrefix)
-		{
-			int offset = includeByteCountPrefix ? 0 : sizeof(ushort);
-			int byteLength = this.ByteLength - offset;
-			byte[] bytes = new byte[byteLength];
-			Marshal.Copy(new IntPtr(base.handle.ToInt64() + offset), bytes, 0, byteLength);
-			return bytes;
-		}
-		#endregion Methods
+        #region Methods
+        public byte[] ToArray(bool includeByteCountPrefix)
+        {
+            int offset = includeByteCountPrefix ? 0 : sizeof(ushort);
+            int byteLength = this.ByteLength - offset;
+            byte[] bytes = new byte[byteLength];
+            Marshal.Copy(new IntPtr(base.handle.ToInt64() + offset), bytes, 0, byteLength);
+            return bytes;
+        }
+        #endregion Methods
 
-		#region Equality Comparisons
-		public static bool operator ==(ChildItemIdList pidl1, ChildItemIdList pidl2)
-		{
-			return ChildItemIdList.Equals(pidl1, pidl2);
-		}
+        #region Equality Comparisons
+        public static bool operator ==(ChildItemIdList pidl1, ChildItemIdList pidl2)
+        {
+            return ChildItemIdList.Equals(pidl1, pidl2);
+        }
 
-		public static bool operator !=(ChildItemIdList pidl1, ChildItemIdList pidl2)
-		{
-			return !ChildItemIdList.Equals(pidl1, pidl2);
-		}
+        public static bool operator !=(ChildItemIdList pidl1, ChildItemIdList pidl2)
+        {
+            return !ChildItemIdList.Equals(pidl1, pidl2);
+        }
 
-		public static bool Equals(ChildItemIdList pidl1, ChildItemIdList pidl2)
-		{
+        public static bool Equals(ChildItemIdList pidl1, ChildItemIdList pidl2)
+        {
             return pidl1.Equals(pidl2);
-		}
+        }
 
-		public bool Equals(ChildItemIdList value)
-		{
-			return Equals(this, value);
-		}
+        public bool Equals(ChildItemIdList value)
+        {
+            return Equals(this, value);
+        }
 
-		public static bool operator ==(ChildItemIdList pidl1, ItemIdList pidl2)
-		{
-			return ItemIdList.Equals(pidl1, pidl2);
-		}
+        public static bool operator ==(ChildItemIdList pidl1, ItemIdList pidl2)
+        {
+            return ItemIdList.Equals(pidl1, pidl2);
+        }
 
-		public static bool operator !=(ChildItemIdList pidl1, ItemIdList pidl2)
-		{
-			return !ItemIdList.Equals(pidl1, pidl2);
-		}
+        public static bool operator !=(ChildItemIdList pidl1, ItemIdList pidl2)
+        {
+            return !ItemIdList.Equals(pidl1, pidl2);
+        }
 
-		public static bool Equals(ChildItemIdList pidl1, ItemIdList pidl2)
-		{
+        public static bool Equals(ChildItemIdList pidl1, ItemIdList pidl2)
+        {
             return pidl1.Value.IsContentEqual(pidl1.ByteLength, pidl2.Value, pidl2.ByteLength);
-		}
+        }
 
-		public bool Equals(ItemIdList value)
-		{
-			return Equals(this, value);
-		}
-		#endregion Equality Comparisons
+        public bool Equals(ItemIdList value)
+        {
+            return Equals(this, value);
+        }
+        #endregion Equality Comparisons
 
-		#region Overrides
-		public override bool Equals(object o)
-		{
+        #region Overrides
+        public override bool Equals(object o)
+        {
             if ((o == null) || !(o is ItemIdList || o is ChildItemIdList))
             {
                 return false;
             }
 
-			return (o is ItemIdList) ? Equals(this, (ItemIdList)o) : Equals(this, (ChildItemIdList)o);
-		}
+            return (o is ItemIdList) ? Equals(this, (ItemIdList)o) : Equals(this, (ChildItemIdList)o);
+        }
 
-		public override int GetHashCode()
-		{
+        public override int GetHashCode()
+        {
             return base.handle.GetHashCode();
         }
 
         public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder("{");
+        {
+            StringBuilder sb = new StringBuilder("{");
             foreach (byte b in this.ToArray(true))
             {
                 sb.AppendFormat(" {0:X2}", b);
             }
-			sb.Append(" }");
-			return sb.ToString();
-		}
+            sb.Append(" }");
+            return sb.ToString();
+        }
         #endregion Overrides
     }
 }

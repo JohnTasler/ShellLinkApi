@@ -12,17 +12,17 @@ namespace ShellLinkApi.Structures
         /// <summary>
         /// The size, in bytes, of this structure. This value MUST be 0x0000004C.
         /// </summary>
-        public readonly uint HeaderSize = Constants.LinkHeaderSize;
+        public uint HeaderSize;
 
         /// <summary>
         /// A class identifier (CLSID). This value MUST be 00021401-0000-0000-C000-000000000046.
         /// </summary>
-        public readonly Guid LinkCLSID = Constants.LinkHeaderCLSID;
+        public Guid LinkCLSID;
 
         /// <summary>
         /// A LinkFlags structure (section 2.1.1) that specifies information about the shell link and the presence of optional portions of the structure.
         /// </summary>
-        public Constants.LinkFlags LinkFlags;
+        public LinkFlags LinkFlags;
 
         /// <summary>
         /// A FileAttributesFlags structure (section 2.1.2) that specifies information about the link target.
@@ -75,7 +75,7 @@ namespace ShellLinkApi.Structures
         /// <summary>
         /// A 32-bit unsigned integer that specifies the expected window state of an application launched by the link. This value SHOULD be one of the following.
         /// </summary>
-        public Constants.ShowCommand ShowCommand = Constants.ShowCommand.Normal;
+        public Constants.ShowCommand ShowCommand;
 
         /// <summary>
         /// that specifies the keystrokes used to launch the application referenced by the shortcut key. This value is assigned to the application after it is launched, so that pressing the key activates that application.
@@ -163,5 +163,4 @@ namespace ShellLinkApi.Structures
     public struct VistaAndAboveIDListDataBlock
     {
     }
-
 }

@@ -1,9 +1,9 @@
-﻿using System;
-using System.IO;
+﻿using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ShellLinkApi.Structures;
 using ShellLinkApi.Extensions;
-using System.Runtime.InteropServices;
+using ShellLinkApi.Tests.Framework;
+using System.Reflection;
 
 namespace ShellLinkApi.Tests
 {
@@ -11,31 +11,30 @@ namespace ShellLinkApi.Tests
     public class ShellLinkHeaderTests
     {
         [TestMethod]
-        public void VerifyStructureSizes()
+        public void VerifyStructureSize()
         {
-            Assert.AreEqual(0x4C, Marshal.SizeOf<ShellLinkHeader>());
+            Assert.AreEqual(Constants.LinkHeaderSize, (uint)Marshal.SizeOf<ShellLinkHeader>());
         }
 
         [TestMethod]
-        public void ReadHeaderOfMyPCShortcut()
+        [DeploymentItem(TestConstants.InputFileFolderPath + "This PC.lnk", TestConstants.InputFileFolderName)]
+        public void ReadShortcutHeader()
         {
-            using (var stream = OpenFileStreamForReading(@"C:\temp\This PC.lnk"))
+            using (var stream = TestContext.OpenFileStreamForReading(MethodBase.GetCurrentMethod()))
             {
                 var shellLinkHeader = stream.ReadStructure<ShellLinkHeader>();
-                Assert.AreEqual(0x4Cu, shellLinkHeader.HeaderSize);
+                shellLinkHeader.AssertCommonFieldsAreValid();
             }
         }
 
-        [TestMethod]
-        public void ReadHeaderOfTaskManagerShortcut()
+        public TestContext TestContext { get; set; }
+    }
+    internal static class ShellLinkHeaderExtensions
+    {
+        public static void AssertCommonFieldsAreValid(this ShellLinkHeader @this)
         {
-            var shellLink = new ShellLink(@"C:\temp\Task Manager.lnk");
-            Assert.AreEqual(0x4Cu, shellLink.ShellLinkHeader.HeaderSize);
-        }
-
-        private static FileStream OpenFileStreamForReading(string fileName)
-        {
-            return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, 0x1000, FileOptions.SequentialScan);
+            Assert.AreEqual(Constants.LinkHeaderSize, @this.HeaderSize);
+            Assert.AreEqual(Constants.LinkHeaderCLSID, @this.LinkCLSID);
         }
     }
 }
