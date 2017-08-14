@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace ShellLinkApi.Structures
+namespace ShellLinkApi
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct LinkFlags
